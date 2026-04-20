@@ -64,7 +64,7 @@ app.post('/info', async (req, res) => {
 
     // --flat-playlist prevents resolving playlists, -J is JSON dump
     // We skip extra network calls by requesting only what we need
-    const yt = spawn('yt-dlp', [
+    const yt = spawn('./yt-dlp', [
         ...BASE_FLAGS,
         '-J',            // full JSON (needed for format list)
         url
@@ -146,7 +146,7 @@ app.get('/download', (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${safeTitle}.mp4"`);
     res.setHeader('Content-Type', 'video/mp4');
 
-    const yt = spawn('yt-dlp', [
+    const yt = spawn('./yt-dlp', [
         ...BASE_FLAGS,
         '-f', formatArg,
         '--merge-output-format', 'mp4',
@@ -197,7 +197,7 @@ app.get('/download-audio', (req, res) => {
 
     console.log('[audio] streaming download');
 
-    const yt = spawn('yt-dlp', [
+    const yt = spawn('./yt-dlp', [
         ...BASE_FLAGS,
         '-x',
         '--audio-format', 'mp3',
