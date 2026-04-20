@@ -131,8 +131,9 @@ app.post('/info', async (req, res) => {
     yt.on('error', err => {
         if (responded) return;
         responded = true;
-        console.error('[info] spawn error:', err);
-        res.json({ error: 'yt-dlp not found or failed to start' });
+        console.error('[info] spawn error:', err.message || err);
+        console.error('[info] YT_DLP_PATH:', YT_DLP);
+        res.json({ error: `yt-dlp error: ${err.message || 'failed to start'}. Ensure yt-dlp is installed.` });
     });
 });
 
@@ -152,10 +153,8 @@ app.get('/download', (req, res) => {
     const safeTitle = cached
         ? cached.title.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_').slice(0, 80)
         : 'video';
-    res.setHeader('Content-Disposition', `attachment; filename="${safeTitle}.mp4"`);
-    res.setHeader('Content-Type', 'video/mp4');
 
-    const yt = spawn('./yt-dlp', [
+    const yt = spawn(YT_DLP, [
         ...BASE_FLAGS,
         '-f', formatArg,
         '--merge-output-format', 'mp4',
@@ -163,25 +162,42 @@ app.get('/download', (req, res) => {
         url
     ]);
 
-    yt.stdout.pipe(res);
-    yt.stderr.on('data', chunk => {
-        process.stdout.write('[yt-dlp] ' + chunk);
+    let headersSent = false;
+
+    yt.on('error', err => {
+        console.error('[download] spawn error:', err.message || err);
+        if (!headersSent) {
+            res.status(500).send('Download failed: yt-dlp error');
+        } else {
+            // Headers already sent, can't send error response
+            console.error('[download] Headers already sent, cannot send error response');
+            res.end();
+        }
     });
 
     yt.on('close', code => {
         if (code !== 0) {
-            console.error(`[download] failed, code=${code}`);
-            if (!res.headersSent) res.status(500).send('Download failed');
-            return;
+            console.error(`[download] yt-dlp exited with code ${code}`);
+            if (!headersSent) {
+                res.status(500).send('Download failed: yt-dlp process error');
+            }
         }
-
         if (!res.writableEnded) res.end();
         console.log('[download] stream completed');
     });
 
-    yt.on('error', err => {
-        console.error('[download] spawn error:', err);
-        if (!res.headersSent) res.status(500).send('Download failed');
+    // Set headers only after yt-dlp starts successfully
+    yt.stdout.once('data', () => {
+        if (!headersSent) {
+            res.setHeader('Content-Disposition', `attachment; filename="${safeTitle}.mp4"`);
+            res.setHeader('Content-Type', 'video/mp4');
+            headersSent = true;
+        }
+    });
+
+    yt.stdout.pipe(res);
+    yt.stderr.on('data', chunk => {
+        process.stdout.write('[yt-dlp] ' + chunk);
     });
 
     req.on('close', () => {
@@ -201,8 +217,6 @@ app.get('/download-audio', (req, res) => {
     const safeTitle = cached
         ? cached.title.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_').slice(0, 80)
         : 'audio';
-    res.setHeader('Content-Disposition', `attachment; filename="${safeTitle}.mp3"`);
-    res.setHeader('Content-Type', 'audio/mpeg');
 
     console.log('[audio] streaming download');
 
@@ -215,25 +229,40 @@ app.get('/download-audio', (req, res) => {
         url
     ]);
 
-    yt.stdout.pipe(res);
-    yt.stderr.on('data', chunk => {
-        process.stdout.write('[yt-dlp audio] ' + chunk);
+    let headersSent = false;
+
+    yt.on('error', err => {
+        console.error('[audio] spawn error:', err.message || err);
+        if (!headersSent) {
+            res.status(500).send('Download failed: yt-dlp error');
+        } else {
+            res.end();
+        }
     });
 
     yt.on('close', code => {
         if (code !== 0) {
-            console.error(`[audio] failed, code=${code}`);
-            if (!res.headersSent) res.status(500).send('Download failed');
-            return;
+            console.error(`[audio] yt-dlp exited with code ${code}`);
+            if (!headersSent) {
+                res.status(500).send('Download failed: yt-dlp process error');
+            }
         }
-
         if (!res.writableEnded) res.end();
         console.log('[audio] stream completed');
     });
 
-    yt.on('error', err => {
-        console.error('[audio] spawn error:', err);
-        if (!res.headersSent) res.status(500).send('Download failed');
+    // Set headers only after yt-dlp starts successfully
+    yt.stdout.once('data', () => {
+        if (!headersSent) {
+            res.setHeader('Content-Disposition', `attachment; filename="${safeTitle}.mp3"`);
+            res.setHeader('Content-Type', 'audio/mpeg');
+            headersSent = true;
+        }
+    });
+
+    yt.stdout.pipe(res);
+    yt.stderr.on('data', chunk => {
+        process.stdout.write('[yt-dlp audio] ' + chunk);
     });
 
     req.on('close', () => {

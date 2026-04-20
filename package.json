@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "setup": "bash setup-ytdlp.sh || echo 'Setup script skipped (Windows or no bash)'",
+    "start": "npm run setup && node server.js"
   },
   "keywords": [],
   "author": "",
