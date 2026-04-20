@@ -1,12 +1,14 @@
 const express = require('express');
 const { spawn } = require('child_process');
-const fs = require('fs');
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 app.use(express.static('public'));
+
+// Get the yt-dlp command (Render will have it installed via Python)
+const YT_DLP = process.env.YT_DLP_PATH || 'yt-dlp';
 
 // ─── In-memory cache (5-minute TTL) ────────────────────────────────────────
 const infoCache = new Map();
@@ -63,16 +65,11 @@ app.post('/info', async (req, res) => {
 
     console.log('[info] Fetching…');
 
-    if (!fs.existsSync('./yt-dlp')) {
-        console.error('[info] yt-dlp not found');
-        return res.json({ error: 'yt-dlp not installed' });
-    }
-
     let responded = false;
 
     // --flat-playlist prevents resolving playlists, -J is JSON dump
     // We skip extra network calls by requesting only what we need
-    const yt = spawn('./yt-dlp', [
+    const yt = spawn(YT_DLP, [
         ...BASE_FLAGS,
         '-J',            // full JSON (needed for format list)
         url
@@ -147,11 +144,6 @@ app.get('/download', (req, res) => {
 
     if (!url || !isValid(url)) return res.status(400).send('Invalid URL');
 
-    if (!fs.existsSync('./yt-dlp')) {
-        console.error('[download] yt-dlp not found');
-        return res.status(500).send('yt-dlp not installed');
-    }
-
     const formatArg = formatId
         ? `${formatId}+bestaudio/best`
         : 'bestvideo+bestaudio/best';
@@ -205,11 +197,6 @@ app.get('/download-audio', (req, res) => {
 
     if (!url || !isValid(url)) return res.status(400).send('Invalid URL');
 
-    if (!fs.existsSync('./yt-dlp')) {
-        console.error('[audio] yt-dlp not found');
-        return res.status(500).send('yt-dlp not installed');
-    }
-
     const cached = getCached(url);
     const safeTitle = cached
         ? cached.title.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_').slice(0, 80)
@@ -219,7 +206,7 @@ app.get('/download-audio', (req, res) => {
 
     console.log('[audio] streaming download');
 
-    const yt = spawn('./yt-dlp', [
+    const yt = spawn(YT_DLP, [
         ...BASE_FLAGS,
         '-x',
         '--audio-format', 'mp3',

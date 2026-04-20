@@ -1,0 +1,11 @@
+version: 0.1
+
+services:
+  - type: web
+    name: youtube-downloader
+    runtime: node
+    buildCommand: pip install -r requirements.txt && npm install
+    startCommand: node server.js
+    envVars:
+      - key: YT_DLP_PATH
+        value: yt-dlp
