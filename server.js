@@ -1,5 +1,6 @@
 const express = require('express');
 const { spawn } = require('child_process');
+const fs = require('fs');
 
 const app = express();
 const PORT = 3000;
@@ -62,6 +63,13 @@ app.post('/info', async (req, res) => {
 
     console.log('[info] Fetching…');
 
+    if (!fs.existsSync('./yt-dlp')) {
+        console.error('[info] yt-dlp not found');
+        return res.json({ error: 'yt-dlp not installed' });
+    }
+
+    let responded = false;
+
     // --flat-playlist prevents resolving playlists, -J is JSON dump
     // We skip extra network calls by requesting only what we need
     const yt = spawn('./yt-dlp', [
@@ -77,6 +85,8 @@ app.post('/info', async (req, res) => {
     yt.stderr.on('data', chunk => { stderr += chunk; });
 
     yt.on('close', () => {
+        if (responded) return;
+        responded = true;
         try {
             const info = JSON.parse(data);
 
@@ -122,6 +132,8 @@ app.post('/info', async (req, res) => {
     });
 
     yt.on('error', err => {
+        if (responded) return;
+        responded = true;
         console.error('[info] spawn error:', err);
         res.json({ error: 'yt-dlp not found or failed to start' });
     });
@@ -134,6 +146,11 @@ app.get('/download', (req, res) => {
     const { url, formatId } = req.query;
 
     if (!url || !isValid(url)) return res.status(400).send('Invalid URL');
+
+    if (!fs.existsSync('./yt-dlp')) {
+        console.error('[download] yt-dlp not found');
+        return res.status(500).send('yt-dlp not installed');
+    }
 
     const formatArg = formatId
         ? `${formatId}+bestaudio/best`
@@ -187,6 +204,11 @@ app.get('/download-audio', (req, res) => {
     const { url } = req.query;
 
     if (!url || !isValid(url)) return res.status(400).send('Invalid URL');
+
+    if (!fs.existsSync('./yt-dlp')) {
+        console.error('[audio] yt-dlp not found');
+        return res.status(500).send('yt-dlp not installed');
+    }
 
     const cached = getCached(url);
     const safeTitle = cached
