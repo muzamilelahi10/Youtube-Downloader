@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YTLoader — YouTube Downloader</title>
+  <meta name="description" content="Download YouTube videos in any resolution and audio as MP3 instantly." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <div class="container">
+
+    <!-- HEADER -->
+    <header class="site-header">
+      <div class="logo-wrap">
+        <div class="logo-icon">▶</div>
+        <h1>YTLoader</h1>
+      </div>
+      <p>Download any YouTube video — pick your resolution or grab the audio</p>
+    </header>
+
+    <!-- INPUT -->
+    <div class="input-box">
+      <input type="text" id="url" placeholder="Paste a YouTube link…" autocomplete="off" spellcheck="false" />
+      <button id="fetchBtn">Fetch</button>
+    </div>
+
+    <!-- RESULT -->
+    <div id="result"></div>
+
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast"><span class="toast-icon"></span><span id="toast-msg"></span></div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
