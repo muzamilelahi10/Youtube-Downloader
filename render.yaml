@@ -8,4 +8,4 @@ services:
     startCommand: node server.js
     envVars:
       - key: YT_DLP_PATH
-        value: yt-dlp
+        value: python -m yt_dlp

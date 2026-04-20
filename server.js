@@ -8,7 +8,13 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // Get the yt-dlp command (Render will have it installed via Python)
-const YT_DLP = process.env.YT_DLP_PATH || 'yt-dlp';
+let YT_DLP = process.env.YT_DLP_PATH || 'python -m yt_dlp';
+
+// Helper function to spawn yt-dlp with correct command/args
+function spawnYtDlp(args, options = {}) {
+    const [command, ...cmdArgs] = YT_DLP.split(' ');
+    return spawn(command, [...cmdArgs, ...args], options);
+}
 
 // ─── In-memory cache (5-minute TTL) ────────────────────────────────────────
 const infoCache = new Map();
@@ -69,7 +75,7 @@ app.post('/info', async (req, res) => {
 
     // --flat-playlist prevents resolving playlists, -J is JSON dump
     // We skip extra network calls by requesting only what we need
-    const yt = spawn(YT_DLP, [
+    const yt = spawnYtDlp([
         ...BASE_FLAGS,
         '-J',            // full JSON (needed for format list)
         url
@@ -154,7 +160,7 @@ app.get('/download', (req, res) => {
         ? cached.title.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_').slice(0, 80)
         : 'video';
 
-    const yt = spawn(YT_DLP, [
+    const yt = spawnYtDlp([
         ...BASE_FLAGS,
         '-f', formatArg,
         '--merge-output-format', 'mp4',
@@ -220,7 +226,7 @@ app.get('/download-audio', (req, res) => {
 
     console.log('[audio] streaming download');
 
-    const yt = spawn(YT_DLP, [
+    const yt = spawnYtDlp([
         ...BASE_FLAGS,
         '-x',
         '--audio-format', 'mp3',
