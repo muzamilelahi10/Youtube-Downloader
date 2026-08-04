@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YouTube Downloader</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="workspace">
+        <div class="brand">
+          <span class="mark">YT</span>
+          <div>
+            <h1>YouTube Downloader</h1>
+            <p>Video, audio, and playlist downloads</p>
+          </div>
+        </div>
+
+        <div class="mode-toggle" role="tablist" aria-label="Download mode">
+          <button type="button" class="mode-btn active" data-mode="video" role="tab" aria-selected="true">Single Video</button>
+          <button type="button" class="mode-btn" data-mode="playlist" role="tab" aria-selected="false">Playlist</button>
+        </div>
+
+        <form id="lookup-form" class="lookup">
+          <input id="url-input" name="url" type="url" placeholder="Paste YouTube video link (e.g. https://www.youtube.com/watch?v=...)" autocomplete="off" required>
+          <button type="submit">Fetch</button>
+        </form>
+
+        <div id="status" class="status" role="status"></div>
+        <section id="results" class="results" aria-live="polite"></section>
+      </section>
+    </main>
+  </body>
+</html>

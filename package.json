@@ -1,0 +1,18 @@
+{
+  "name": "youtube-downloader",
+  "version": "1.0.0",
+  "description": "Render-ready YouTube video, audio, and playlist downloader.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "youtubei.js": "^17.2.0"
+  }
+}
